@@ -1,7 +1,11 @@
 from langchain_chroma import Chroma
 from langchain_classic import hub
+from langchain_classic.retrievers.contextual_compression import (
+    ContextualCompressionRetriever,
+)
+from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableMap, RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough
 
 from bluebridge.config import Config
 
@@ -12,17 +16,20 @@ def build_rag_chain(vector_store: Chroma, config: Config):
     """
     Compose a simple RAG chain: retriever -> prompt -> LLM -> text.
     """
-    if config.rerank:
-        retriever = vector_store.as_retriever(
-            search_type="mmr",
-            search_kwargs={
-                "k": config.top_k,
-                "fetch_k": config.fetch_k,
-                "lambda_mult": 0.5,
-            },
-        )
-    else:
-        retriever = vector_store.as_retriever(search_kwargs={"k": config.top_k})
+
+    base = vector_store.as_retriever(
+        search_type="mmr",
+        search_kwargs={
+            "k": config.mmr_k,
+            "fetch_k": config.fetch_k,
+            "lambda_mult": config.mmr_lambda,
+        },
+    )
+
+    retriever = ContextualCompressionRetriever(
+        base_retriever=base,
+        base_compressor=config.reranker_model.instance(config.top_k),
+    )
 
     # Format retrieved docs into a numbered context block
     def format_docs(docs):
@@ -40,7 +47,7 @@ def build_rag_chain(vector_store: Chroma, config: Config):
             "question": RunnablePassthrough(),
         }
         | RAG_PROMPT
-        | config.llm_model.llm_instance()
+        | config.llm_model.instance()
         | StrOutputParser()
     )
 

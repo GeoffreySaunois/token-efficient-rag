@@ -14,7 +14,7 @@ def build_or_load_vectorstore(
     Create (or load) a Chroma vector DB persisted on disk.
     """
 
-    embedding_function = config.embedding.embedding_function(config.models_dir)
+    embedding_function = config.embedding_model.instance(config.models_dir)
 
     if config.vector_store_dir.exists() and not config.rebuild_vector_store:
         print(f"[info] Using existing Chroma at {config.vector_store_dir}")

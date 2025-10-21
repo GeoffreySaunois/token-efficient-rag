@@ -1,7 +1,9 @@
 [project]
 	dependencies = [
+		"accelerate>=1.11.0",
 		"chardet>=5.2.0",
 		"chromadb>=0.5.0",
+		"huggingface-hub[hf-xet]>=0.35.3",
 		"langchain>=0.2.0",
 		"langchain-chroma>=1.0.0",
 		"langchain-classic>=1.0.0",
@@ -11,7 +13,7 @@
 		"langchain-openai>=0.1.0",
 		"openai>=2.3.0",
 		"pydantic>=2.12.2",
-		"sentence-transformers>=5.1.1",
+		"sentence-transformers>=2.2.2,<3",
 		"typer>=0.19.2",
 	]
 	description = "Add your description here"
